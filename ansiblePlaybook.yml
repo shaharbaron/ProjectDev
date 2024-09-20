@@ -9,3 +9,15 @@
         region: "us-east-1"
         state: present
       register: vpc
+
+- name: Create Subnet on AWS
+  hosts: localhost
+  gather_facts: False
+  tasks:
+    - name: Create Subnet
+      amazon.aws.ec2_vpc_subnet:
+        vpc_id: "{{ vpc.vpc.id }}"
+        cidr: "10.0.1.0/24"
+        region: "us-east-1"
+        state: present
+      register: subnet
