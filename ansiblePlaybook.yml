@@ -32,3 +32,18 @@
         region: "us-east-1"
         state: present
       register: igw
+
+      
+- name: Create Route Table on AWS
+  hosts: localhost
+  gather_facts: False
+  tasks:
+    - name: Create Route Table
+      amazon.aws.ec2_vpc_route_table:
+        vpc_id: "{{ vpc.vpc.id }}"
+        routes:
+          - dest: 0.0.0.0/0
+            gateway_id: "{{ igw.gateway_id }}"
+        region: "us-east-1"
+        state: present
+      register: route_table
