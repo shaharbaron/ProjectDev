@@ -46,7 +46,7 @@
             ports:
               - 80   
               - 22
-            cidr_ip: "your-public-ip-address/32"
+            cidr_ip: "176.228.223.102/32"
         region: "us-east-1"
         state: present
       register: sg
