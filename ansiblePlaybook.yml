@@ -21,3 +21,14 @@
         region: "us-east-1"
         state: present
       register: subnet
+
+- name: Create IGW on AWS
+  hosts: localhost
+  gather_facts: False
+  tasks:
+    - name: Create IGW
+      amazon.aws.ec2_vpc_igw:
+        vpc_id: "{{ vpc.vpc.id }}"
+        region: "us-east-1"
+        state: present
+      register: igw
