@@ -32,8 +32,7 @@
         region: "us-east-1"
         state: present
       register: igw
-
-      
+ 
 - name: Create Route Table on AWS
   hosts: localhost
   gather_facts: False
@@ -47,3 +46,40 @@
         region: "us-east-1"
         state: present
       register: route_table
+
+- name: Create Security Group on AWS
+  hosts: localhost
+  gather_facts: False
+  tasks:
+    - name: Create Security Group
+      amazon.aws.ec2_security_group:
+        name: "my"-ansible-sequrity-group
+        description: "Security group for my app"
+        vpc_id: "{{ vpc.vpc.id }}"
+        rules:
+          - proto: tcp
+            ports:
+              - 80
+              - 22
+            cidr_ip: "your-public-ip-address/32"
+        region: "us-east-1"
+        state: present
+      register: sg
+      
+- name: Launch EC2 Instance on AWS
+  hosts: localhost
+  gather_facts: False
+  tasks:
+    - name: Launch EC2 Instance
+      amazon.aws.ec2_instance:
+        image: "ami-0129bfde49ddb0ed6"
+        instance_type: "t2.micro"
+        key_name: "my-ansible-key"
+        security_group: "{{ sg.group_id }}"
+        region: "us-east-1"
+        state: present
+        volumes:
+          - device_name: /dev/sda1
+            ebs:
+              volume_size: 8
+      register: ec2
