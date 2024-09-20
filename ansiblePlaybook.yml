@@ -1,0 +1,67 @@
+- name: Provision AWS Infrastructure
+  hosts: localhost
+  gather_facts: False
+  tasks:
+
+    - name: Create VPC
+      amazon.aws.ec2_vpc_net:
+        name: "my-ansible-vpc"
+        cidr_block: "10.0.0.0/16"
+        region: "us-east-1"
+        state: present
+      register: vpc
+
+    - name: Create Subnet
+      amazon.aws.ec2_vpc_subnet:
+        vpc_id: "{{ vpc.vpc.id }}"
+        cidr: "10.0.1.0/24"
+        region: "us-east-1"
+        state: present
+      register: subnet
+
+    - name: Create IGW
+      amazon.aws.ec2_vpc_igw:
+        vpc_id: "{{ vpc.vpc.id }}"
+        region: "us-east-1"
+        state: present
+      register: igw
+
+    - name: Create Route Table
+      amazon.aws.ec2_vpc_route_table:
+        vpc_id: "{{ vpc.vpc.id }}"
+        routes:
+          - dest: 0.0.0.0/0
+            gateway_id: "{{ igw.gateway_id }}"
+        region: "us-east-1"
+        state: present
+      register: route_table
+
+    - name: Create Security Group
+      amazon.aws.ec2_security_group:
+        name: "my-ansible-security-group"
+        description: "Security group for my app"
+        vpc_id: "{{ vpc.vpc.id }}"
+        rules:
+          - proto: tcp
+            ports:
+              - 80   
+              - 22
+            cidr_ip: "176.228.223.102/32"
+        region: "us-east-1"
+        state: present
+      register: sg
+
+    - name: Launch EC2 Instance
+      amazon.aws.ec2_instance:
+        image: "ami-0129bfde49ddb0ed6"
+        instance_type: "t2.micro"
+        key_name: "my-ansible-key"
+        security_groups:
+          - "{{ sg.group_id }}"
+        region: "us-east-1"
+        state: present
+        volumes:
+          - device_name: /dev/sda1
+            ebs:
+              volume_size: 8
+      register: ec2
