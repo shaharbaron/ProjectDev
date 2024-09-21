@@ -1,9 +1,8 @@
-FROM python:3.9
-RUN apt-get update && apt-get install -y \
-    python3-pygame \
-    xvfb \
-    && rm -rf /var/lib/apt/lists/*
-WORKDIR /app
-COPY . /app
-RUN pip install pygame
-CMD ["xvfb-run", "python", "tetris.py"]
+# שימוש בתמונה בסיסית של Nginx
+FROM nginx:alpine
+
+# העתקת קבצי ה-HTML לתוך תיקיית ברירת המחדל של Nginx
+COPY . /usr/share/nginx/html
+
+# הפקודה להריץ את Nginx (היא מובנית בתמונה)
+CMD ["nginx", "-g", "daemon off;"]
