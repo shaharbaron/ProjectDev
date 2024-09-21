@@ -1,0 +1,24 @@
+name: Deploy to Production
+
+# מגדיר מתי הפעולה תתחיל - במקרה הזה, כשעושים push לענף main
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2  # הורדת הקוד מהריפו
+
+      - name: Build and push Docker image
+        run: |
+          docker build -t myapp:latest .
+          docker tag myapp:latest mydockerhubuser/myapp:latest
+          docker push mydockerhubuser/myapp:latest  # דחיפת ה-image ל-Docker Hub
+
+      - name: Deploy to Production
+        run: |
+          ssh user@production_host 'docker pull mydockerhubuser/myapp:latest && docker stop myapp && docker rm myapp && docker run -d --name myapp -p 80:80 mydockerhubuser/myapp:latest'  # חיבור לשרת production והפעלת הקונטיינר
