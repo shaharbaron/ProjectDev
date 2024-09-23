@@ -8,4 +8,4 @@ services:
     volumes:
       - "./:/usr/share/nginx/html"
     environment:
-      - NODE_ENV-prod
+      - NODE_ENV:prod
