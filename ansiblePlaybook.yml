@@ -44,9 +44,12 @@
         rules:
           - proto: tcp
             ports:
-              - 80   
-              - 22
-            cidr_ip: "176.228.223.102/32"
+              - 80  
+            cidr_ip: "0.0.0.0/0" 
+          - proto: tcp
+            ports:
+              - 22 
+            cidr_ip: "176.228.223.102/32" 
         region: "us-east-1"
         state: present
       register: sg
@@ -65,3 +68,20 @@
             ebs:
               volume_size: 8
       register: ec2
+
+    - name: Install Docker
+      amazon.aws.ec2_instance:
+        name: Install Docker
+        hosts: localhost
+        gather_facts: False
+        tasks:
+          - name: Install docker
+            apt:
+              name: docker.io
+              state: present
+            become: yes
+
+    - name: Run Docker Container
+      command: >
+        docker run -d -p 80:80
+        shaharbaron/project-dev-college:latest
