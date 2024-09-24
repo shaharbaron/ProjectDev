@@ -1,11 +1,8 @@
+# instead the docker run
 version: "3.3"
 services:
   web:
-    image: my_nginx
-    container_name: my-web-site
+    image: shaharbaron/project-dev-college:latest
+    container_name: memory-game
     ports:
       - "80:80"
-    volumes:
-      - "./:/usr/share/nginx/html"
-    environment:
-      - NODE_ENV:prod
