@@ -56,7 +56,7 @@
 
     - name: Launch EC2 Instance
       amazon.aws.ec2_instance:
-        image: "{{ 'ami-0ebfd941bbafe70c6' }}"
+        ami: "ami-0ebfd941bbafe70c6"
         instance_type: "t2.micro"
         key_name: "my-ansible-key"
         security_groups:
@@ -70,17 +70,23 @@
       register: ec2
 
     - name: Wait for EC2 to be reachable
-      wait_for_connection:
-        timeout: 300
-      delegate_to: "{{ ec2.public_ip_address }}"
+      wait_for:
+        host: "{{ ec2.public_ip_address }}"
+        port: 22
+        delay: 60
+        timeout: 320
+        state: started
+
     - name: Install Docker on EC2
       ansible.builtin.apt:
         name: docker.io
         state: present
       become: yes
-      delegate_to: "{{ ec2.public_ip_address }}"
+      remote_user: ubuntu 
+      hosts: "{{ ec2.public_ip_address }}"
 
     - name: Run Docker Container on EC2
       command: docker run -d -p 80:80 shaharbaron/project-dev-college:latest
       become: yes
-      delegate_to: "{{ ec2.public_ip_address }}"
+      remote_user: ubuntu
+      hosts: "{{ ec2.public_ip_address }}"
