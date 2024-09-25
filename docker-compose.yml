@@ -3,7 +3,7 @@ version: "3.3"
 services:
   web:
     # השם של התמונה שיצרת, יעבוד רק אם השם של התמונה יהיה כמו השם שצוין פה מטה
-    image: my_nginx
+    image: shaharbaron/project_dev:latest
     container_name: memory-game
     ports:
       - "80:80"

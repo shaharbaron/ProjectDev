@@ -1,0 +1,4 @@
+Untagged: my_nginx:latest
+Untagged: shaharbaron/my_nginx:latest
+Untagged: shaharbaron/my_nginx@sha256:bc4f673d7e11d195c714d1e74443e8ad58ae81845f1612fc6df24a1dfc5c29bf
+Deleted: sha256:0d2cbc9ae56ab507773cd75fbc93443b650515d18e78629b09ad32b43839ac01
