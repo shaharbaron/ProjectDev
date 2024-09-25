@@ -21,7 +21,7 @@ if len(cards) < 2:
  raise Exception("Game is not initialized")
  
 
-# scure check
+#scure check
 for i in range(len(cards)):
     cards[i].click()
     for j in range(i+1,len(cards)):  
@@ -34,7 +34,7 @@ for i in range(len(cards)):
        assert int (new_score) > previous_score # score is not updated need to be fixed < to >
        previous_score = int(new_score)
      except AssertionError:
-        print("score is not updated")
+        print("test 1: score is not updated")
         driver.quit()
         exit(1)
 
@@ -47,9 +47,30 @@ time.sleep(0.5)
 try:
     assert cardslen == len(cards)
 except AssertionError:
-    print("restart button is not working")
-    driver.quit()
-    exit(1)
-   
+ print("test 2: restart button is not working")
+ driver.quit()
+ exit(1)
+
+#game check
+try:
+    first_card = driver.find_element(By.CSS_SELECTOR, 'div.card[data-id="2b"]')
+    first_card.click()
+    time.sleep(1)
+
+    second_card = driver.find_element(By.CSS_SELECTOR, 'div.card[data-id="2r"]')
+    second_card.click()
+    time.sleep(1)
+
+    current_player = driver.find_element(By.CLASS_NAME, 'Player1' or 'Player2')
+
+    assert current_player.is_displayed()  
+
+except AssertionError:
+    print("test 3:the player is not changed")
+
+
+
+
+
 
 driver.quit()
