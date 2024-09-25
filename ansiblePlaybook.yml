@@ -56,7 +56,7 @@
 
     - name: Launch EC2 Instance
       amazon.aws.ec2_instance:
-        image: "ami-0ebfd941bbafe70c6"
+        image: "{{ 'ami-0ebfd941bbafe70c6' }}"
         instance_type: "t2.micro"
         key_name: "my-ansible-key"
         security_groups:
