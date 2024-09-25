@@ -2,7 +2,14 @@
 version: "3.3"
 services:
   web:
-    image: shaharbaron/project-dev-college:latest
+    # השם של התמונה שיצרת, יעבוד רק אם השם של התמונה יהיה כמו השם שצוין פה מטה
+    image: my_nginx
     container_name: memory-game
     ports:
       - "80:80"
+    # שאתה רוצה לשתף קבצים מקומיים עם הקונטיינר שלך בזמן הפיתוח
+    volumes:
+      - "./:/usr/share/nginx/html/index.html/"
+    # כדי להבדיל בין סביבת הפיתוח לסביבת הפרודקיישן
+    environment:
+      - NODE_ENV=prod
