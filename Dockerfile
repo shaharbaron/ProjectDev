@@ -8,10 +8,3 @@ EXPOSE 80
 # מוודא ש-nginx ירוץ במצב פעיל (ולא רק כרקע) בתוך הקונטיינר
 CMD ["nginx", "-g", "daemon off;"]
 
-# FROM node:16.14
-# WORKDIR /app
-# COPY package*.json ./
-# RUN npm install
-# COPY . .
-# CMD [ "npm", "start" ]
-
