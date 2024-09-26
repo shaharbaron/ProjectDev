@@ -1,0 +1,216 @@
+---
+- name: Deploy infrastructure on AWS
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Create VPC
+      amazon.aws.ec2_vpc_net:
+        name: "{{ vpc_name }}"
+        cidr_block: "{{ network }}"
+        region: "{{ zone }}"
+        state: present
+        dns_hostnames: yes
+        dns_support: yes
+        multi_ok: no
+        tags:
+          Name: "{{ vpc_name }}"
+      register: vpc
+
+    - name: Add VPC definition to vars file
+      ansible.builtin.lineinfile:
+        path: group_vars/colman.env
+        regexp: "vpc_id: "
+        line: "vpc_id: {{ vpc.vpc.id }}"
+        state: present
+        create: True
+
+    - name: Associate subnet to the VPC
+      amazon.aws.ec2_vpc_subnet:
+        state: present
+        vpc_id: "{{ vpc.vpc.id }}"
+        region: "{{ zone }}"
+        cidr: "{{ subnet_cidr }}"
+        map_public: yes
+        az: "{{ subnet }}"
+        resource_tags:
+          Name: "{{ vpc_name }}"
+        wait: yes
+      register: subnet
+
+    - name: Add subnet definition to vars file
+      ansible.builtin.lineinfile:
+        path: group_vars/colman.env
+        regexp: "subnet_id: "
+        line: "subnet_id: {{ subnet.subnet.id }}"
+        state: present
+        create: True
+
+    - name: Create IGW
+      amazon.aws.ec2_vpc_igw:
+        vpc_id: "{{ vpc.vpc.id }}"
+        region: "{{ zone }}"
+        state: present
+        tags:
+          Name: "{{ vpc_name }}_igw"
+      register: igw
+
+    - name: Add IGW definition to vars file
+      ansible.builtin.lineinfile:
+        path: group_vars/colman.env
+        regexp: "igw_id: "
+        line: "igw_id: {{ igw.gateway_id }}"
+        state: present
+        create: True
+
+    - name: Route table for public Subnet
+      amazon.aws.ec2_vpc_route_table:
+        vpc_id: "{{ vpc.vpc.id }}"
+        region: "{{ zone }}"
+        state: present
+        subnets:
+          - "{{ subnet.subnet.id }}"
+        routes:
+          - dest: 0.0.0.0/0
+            gateway_id: "{{ igw.gateway_id }}"
+        tags:
+          Name: "{{ vpc_name }}_public_rt"
+
+    - name: Create security group
+      amazon.aws.ec2_security_group:
+        name: "{{ vpc_name }} VPC SG"
+        description: "{{ vpc_name }} VPC SG"
+        vpc_id: "{{ vpc.vpc.id }}"
+        region: "{{ zone }}"
+        state: present
+        rules:
+          - proto: tcp
+            ports:
+              - 80
+              - 22
+            cidr_ip: 0.0.0.0/0
+      register: sg
+
+    - name: Create server
+      amazon.aws.ec2_instance:
+        image_id: "{{ aws_ubuntu_ami }}"
+        wait: yes
+        instance_type: "{{ Server_type }}"
+        region: "{{ zone }}"
+        key_name: "{{ keypair }}"
+        volumes:
+          - device_name: /dev/sda1
+            ebs:
+              volume_type: gp3
+              volume_size: "{{ server_volume_size }}"
+              delete_on_termination: true
+        tags:
+          Name: "{{ server_name }}"
+          Environment: "{{ env }}"
+        exact_count: 1
+        wait_timeout: 300
+        vpc_subnet_id: "{{ subnet.subnet.id }}"
+        security_group: "{{ sg.group_id }}"
+        network:
+          assign_public_ip: yes
+        state: running
+      register: server_ec2
+
+    - name: Get IP of instance
+      amazon.aws.ec2_instance_info:
+        filters:
+          "tag:Name": "{{ server_name }}"
+          instance-state-name: ["running"]
+      register: ec2_data
+
+    - debug: var=ec2_data.instances[0].public_ip_address
+
+    - name: Add server public IP to application host group
+      add_host: hostname={{ ec2_data.instances[0].public_ip_address }} groups=app
+
+    - name: Add Public IP definition to vars file
+      ansible.builtin.lineinfile:
+        path: group_vars/colman.env
+        regexp: "server_id: "
+        line: "server_id: {{ ec2_data.instances[0].instance_id }}"
+        state: present
+        create: True
+
+    - name: Wait for SSH to start using external IP
+      wait_for:
+        host: "{{ ec2_data.instances[0].public_ip_address }}"
+        port: 22
+        timeout: 300
+
+    - name: Pause for Ubuntu user access after boot
+      ansible.builtin.pause:
+        seconds: 30
+
+- name: Setup web server and deploy app
+  hosts: app
+  become: yes
+  gather_facts: False
+  vars_files:
+    - group_vars/docker.env
+  tasks:
+    - name: Add GPG key
+      ansible.builtin.shell: wget -qO- https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+
+    - name: Add Docker Repository
+      ansible.builtin.apt_repository:
+        repo: deb https://download.docker.com/linux/ubuntu jammy stable
+        state: present
+
+    - name: Install Docker
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: latest
+        update_cache: true
+
+    - name: Restart Docker service
+      service:
+        name: docker
+        state: restarted
+        enabled: yes
+
+    - name: Copy SSH key for repo access
+      copy:
+        src: ~/.ssh/id_rsa
+        dest: ~/.ssh/id_rsa
+        mode: "0600"
+
+    - name: Clone my app repo
+      git:
+        repo: git@github.com:elieyal/final_project_pass_gen.git
+        dest: /opt/app
+        version: main
+        key_file: ~/.ssh/id_rsa
+        accept_hostkey: yes
+        force: yes
+
+    - name: Build docker image and push to DockerHub
+      shell: "{{ item }}"
+      args:
+        chdir: /opt/app
+      with_items:
+        - docker login -u {{ docker_user }} -p {{ docker_token }}
+        - docker build . -t {{ docker_user }}/pass_gen:latest
+        - docker push {{ docker_user }}/pass_gen:latest
+
+    - name: Start docker app
+      shell: docker-compose up -d
+      args:
+        chdir: /opt/app
+
+    - name: Get public IP from server
+      shell: curl ident.me
+      register: ip_address
+
+    - debug:
+        msg:
+          - "Don't forget to change the HOST secret in GitHub to {{ ip_address.stdout }}"
+          - "Your app is ready to go at http://{{ ip_address.stdout }}"
