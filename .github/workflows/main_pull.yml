@@ -1,0 +1,35 @@
+name: Upload My Image to DockerHub
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build --tag myapp .
+
+      - name: Run Docker container
+        run: docker run -d --name app -p 80:3000 myapp
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+
+      - name: Install Chromium browser
+        run: sudo apt-get install -y chromium-browser
+
+      - name: Install the necessary Python packages
+        run: pip install requests webdriver_manager selenium pytest
+
+      - name: Run the Python tests
+        run: pytest -rA
+
+         
