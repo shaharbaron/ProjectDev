@@ -2,21 +2,18 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.chrome.service import Service as ChromeService
 import time
 
 
 options = webdriver.ChromeOptions()
 options.add_experimental_option('excludeSwitches', ['enable-logging'])
-
 options.add_argument("no-sandbox")
 options.add_argument("headless")
 options.add_argument("window-size=1400,2100")
 
-
-se = Service(executable_path='selenium_test/webDriver/chromedriver')
-driver = webdriver.Chrome(service=se, options=options)
-driver.get("file:///Users/tamirlevi/DevWithgit/ProjectDev/index.html")
+url = "http://localhost"
+driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+driver.get(url)
 
 
 

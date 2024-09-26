@@ -4,6 +4,7 @@ services:
   web:
     # השם של התמונה שיצרת, יעבוד רק אם השם של התמונה יהיה כמו השם שצוין פה מטה
     image: shaharbaron/project_dev:latest
+    platform: linux/amd64
     container_name: memory-game
     ports:
       - "80:80"
