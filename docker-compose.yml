@@ -10,6 +10,3 @@ services:
     # שאתה רוצה לשתף קבצים מקומיים עם הקונטיינר שלך בזמן הפיתוח
     volumes:
       - "./:/usr/share/nginx/html/index.html/"
-    # כדי להבדיל בין סביבת הפיתוח לסביבת הפרודקיישן
-    environment:
-      - NODE_ENV=prod
