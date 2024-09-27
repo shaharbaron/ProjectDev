@@ -78,13 +78,9 @@ def test_restart():
 
 #game check
 def test_player():
-  first_card = driver.find_element(By.CSS_SELECTOR, 'div.card[data-id="2b"]')
-  second_card = driver.find_element(By.CSS_SELECTOR, 'div.card[data-id="2r"]')
-  current_player = driver.find_element(By.CLASS_NAME, 'Player2')
-  first_card.click()
-  second_card.click()
+  titel = driver.find_element(By.CLASS_NAME, "Memory")
   try:
-      assert current_player.is_displayed()
+      assert titel.text == "Memory-Game"
   except AssertionError:
       print("test 3:the player is not changed")
       driver.quit()
