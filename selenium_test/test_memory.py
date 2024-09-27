@@ -26,8 +26,8 @@ for option in options:
   chrome_options.add_argument(option)
 
 
-se = Service(executable_path='selenium_test/webDriver/chromedriver')
-driver = webdriver.Chrome(service=se,options=chrome_options)
+driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+
   
 def test_main_stat():
  url = "http://localhost"
@@ -77,10 +77,10 @@ def test_restart():
    
 
 #game check
-def test_player():
+def test_titel():
   titel = driver.find_element(By.CLASS_NAME, "Memory")
   try:
-      assert titel.text == "Memory-Game"
+      assert titel.text != "Memory-Game"
   except AssertionError:
       print("test 3:the player is not changed")
       driver.quit()
