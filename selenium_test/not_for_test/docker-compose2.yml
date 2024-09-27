@@ -1,9 +1,0 @@
-version: '3.3'
-services:
- web:
-    image: devproject
-    build: .
-    ports:
-      -"80:80"
-    volumes:
-      -"index.html /usr/share/nginx/html"
