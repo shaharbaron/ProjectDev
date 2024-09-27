@@ -2,6 +2,8 @@
 - name: Deploy infrastructure on AWS
   hosts: localhost
   connection: local
+  vars_files:
+    - group_vars/project_vars.yml
   tasks:
     - name: Create VPC
       amazon.aws.ec2_vpc_net:
@@ -18,32 +20,39 @@
 
     - name: Add VPC definition to vars file
       ansible.builtin.lineinfile:
-        path: group_vars/colman.env
+        path: group_vars/project_vars.yml
         regexp: "vpc_id: "
         line: "vpc_id: {{ vpc.vpc.id }}"
         state: present
         create: True
 
-    - name: Associate subnet to the VPC
-      amazon.aws.ec2_vpc_subnet:
-        state: present
-        vpc_id: "{{ vpc.vpc.id }}"
-        region: "{{ zone }}"
-        cidr: "{{ subnet_cidr }}"
-        map_public: yes
-        az: "{{ subnet }}"
-        resource_tags:
-          Name: "{{ vpc_name }}"
-        wait: yes
-      register: subnet
+    - name: Ensure subnet is associated and added to vars file
+      block:
+        - name: Associate subnet to the VPC
+          amazon.aws.ec2_vpc_subnet:
+            state: present
+            vpc_id: "{{ vpc.vpc.id }}"
+            region: "{{ zone }}"
+            cidr: "{{ subnet_cidr }}"
+            map_public: yes
+            az: "{{ subnet }}"
+            resource_tags:
+              Name: "{{ vpc_name }}"
+            wait: yes
+          register: subnet_result
 
-    - name: Add subnet definition to vars file
-      ansible.builtin.lineinfile:
-        path: group_vars/colman.env
-        regexp: "subnet_id: "
-        line: "subnet_id: {{ subnet.subnet.id }}"
-        state: present
-        create: True
+        - name: Add subnet definition to vars file
+          ansible.builtin.lineinfile:
+            path: group_vars/project_vars.yml
+            regexp: "subnet_id: "
+            line: "subnet_id: {{ subnet_result.subnet.id }}"
+            state: present
+            create: True
+      rescue:
+        - name: Handle failure
+          debug:
+            msg: "Failed to associate subnet or add to vars file. Subnet association must complete before adding to vars file."
+          failed_when: true
 
     - name: Create IGW
       amazon.aws.ec2_vpc_igw:
@@ -56,24 +65,30 @@
 
     - name: Add IGW definition to vars file
       ansible.builtin.lineinfile:
-        path: group_vars/colman.env
+        path: group_vars/project_vars.yml
         regexp: "igw_id: "
         line: "igw_id: {{ igw.gateway_id }}"
         state: present
         create: True
 
     - name: Route table for public Subnet
-      amazon.aws.ec2_vpc_route_table:
+      ec2_vpc_route_table:
         vpc_id: "{{ vpc.vpc.id }}"
-        region: "{{ zone }}"
-        state: present
+        region: "{{ aws_region }}"
+        tags:
+          Name: Public
         subnets:
-          - "{{ subnet.subnet.id }}"
+          - "{{ subnet_result.subnet.id }}"
         routes:
           - dest: 0.0.0.0/0
             gateway_id: "{{ igw.gateway_id }}"
-        tags:
-          Name: "{{ vpc_name }}_public_rt"
+      register: public_route_table
+
+    - name: Get user's public IP
+      uri:
+        url: https://api.ipify.org?format=json
+        return_content: yes
+      register: user_public_ip
 
     - name: Create security group
       amazon.aws.ec2_security_group:
@@ -87,7 +102,7 @@
             ports:
               - 80
               - 22
-            cidr_ip: 0.0.0.0/0
+            cidr_ip: "{{ (user_public_ip.content | from_json).ip }}/32"
       register: sg
 
     - name: Create server
@@ -95,7 +110,7 @@
         image_id: "{{ aws_ubuntu_ami }}"
         wait: yes
         instance_type: "{{ Server_type }}"
-        region: "{{ zone }}"
+        region: "{{ aws_region }}"
         key_name: "{{ keypair }}"
         volumes:
           - device_name: /dev/sda1
@@ -107,37 +122,54 @@
           Name: "{{ server_name }}"
           Environment: "{{ env }}"
         exact_count: 1
-        wait_timeout: 300
-        vpc_subnet_id: "{{ subnet.subnet.id }}"
+        wait_timeout: 600
+        vpc_subnet_id: "{{ subnet_result.subnet.id }}"
         security_group: "{{ sg.group_id }}"
         network:
           assign_public_ip: yes
         state: running
-      register: server_ec2
+        user_data: |
+          #!/bin/bash
+          apt-get update
+          apt-get install -y python3 python3-pip
+      register: ec2_instance
+
+    - name: Wait for public IP to be assigned
+      pause:
+        seconds: 10
 
     - name: Get IP of instance
       amazon.aws.ec2_instance_info:
-        filters:
-          "tag:Name": "{{ server_name }}"
-          instance-state-name: ["running"]
-      register: ec2_data
+        instance_ids: "{{ ec2_instance.instances[0].instance_id }}"
+        region: "{{ aws_region }}"
+      register: ec2_info
 
-    - debug: var=ec2_data.instances[0].public_ip_address
+    - debug: var=ec2_info.instances[0].public_ip_address
 
     - name: Add server public IP to application host group
-      add_host: hostname={{ ec2_data.instances[0].public_ip_address }} groups=app
+      add_host:
+        hostname: "{{ ec2_info.instances[0].public_ip_address }}"
+        groups: app
 
     - name: Add Public IP definition to vars file
       ansible.builtin.lineinfile:
-        path: group_vars/colman.env
-        regexp: "server_id: "
-        line: "server_id: {{ ec2_data.instances[0].instance_id }}"
+        path: group_vars/project_vars.yml
+        regexp: "^server_ip: "
+        line: "server_ip: {{ ec2_info.instances[0].public_ip_address }}"
+        state: present
+        create: True
+
+    - name: Add server ID definition to vars file
+      ansible.builtin.lineinfile:
+        path: group_vars/project_vars.yml
+        regexp: "^server_id: "
+        line: "server_id: {{ ec2_info.instances[0].instance_id }}"
         state: present
         create: True
 
     - name: Wait for SSH to start using external IP
       wait_for:
-        host: "{{ ec2_data.instances[0].public_ip_address }}"
+        host: "{{ ec2_info.instances[0].public_ip_address }}"
         port: 22
         timeout: 300
 
@@ -147,10 +179,12 @@
 
 - name: Setup web server and deploy app
   hosts: app
-  become: yes
+  remote_user: ubuntu
+  become: true
   gather_facts: False
   vars_files:
     - group_vars/docker.env
+
   tasks:
     - name: Add GPG key
       ansible.builtin.shell: wget -qO- https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
@@ -191,6 +225,10 @@
         key_file: ~/.ssh/id_rsa
         accept_hostkey: yes
         force: yes
+    - name: Set execute permissions on install_osm.sh
+      file:
+        path: /opt/app/install_osm.sh
+        mode: "0755"
 
     - name: Build docker image and push to DockerHub
       shell: "{{ item }}"
