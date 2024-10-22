@@ -4,6 +4,7 @@
   connection: local
   vars_files:
     - group_vars/project_vars.yml
+    - group_vars/docker.env
   tasks:
     - name: Create VPC
       amazon.aws.ec2_vpc_net:
@@ -202,6 +203,7 @@
           - containerd.io
           - docker-buildx-plugin
           - docker-compose-plugin
+          - docker-compose
         state: latest
         update_cache: true
 
@@ -213,7 +215,7 @@
 
     - name: Copy SSH key for repo access
       copy:
-        src: ~/.ssh/id_rsa
+        src: /mnt/c/Users/User/ProjectDev/ProjectDev2.pem
         dest: ~/.ssh/id_rsa
         mode: "0600"
 
@@ -226,19 +228,19 @@
         accept_hostkey: yes
         force: yes
 
-    - name: Set execute permissions on install_osm.sh
-      file:
-        path: /opt/app/install_osm.sh
-        mode: "0755"
+    - name: Log in to DockerHub
+      community.docker.docker_login:
+        username: "{{ docker_user }}"
+        password: "{{ docker_token }}"
 
-    - name: Build docker image and push to DockerHub
-      shell: "{{ item }}"
-      args:
-        chdir: /opt/app
-      with_items:
-        - docker login -u {{ docker_user }} -p {{ docker_token }}
-        - docker build . -t {{ docker_user }}/pass_gen:latest
-        - docker push {{ docker_user }}/pass_gen:latest
+    - name: Build and push Docker image
+      community.docker.docker_image:
+        build:
+          path: /opt/app
+        name: "{{ docker_user }}/project_dev"
+        tag: latest
+        push: yes
+        source: build
 
     - name: Start docker app
       shell: docker-compose up -d

@@ -1,18 +1,18 @@
 ---
 vpc_name: "my-project-vpc"
 network: "10.0.0.0/16"
-aws_region: "us-east-1"
-zone: "us-east-1"
+aws_region: "eu-central-1"
+zone: "eu-central-1"
 subnet_cidr: "10.0.1.0/24"
-subnet: "us-east-1a"
+subnet: "eu-central-1a"
 server_name: "my-project-server"
 env: "production"
-aws_ubuntu_ami: "ami-05723dfdeb8acd366"
+aws_ubuntu_ami: "ami-0d4a2f1c20fcc71cb"
 Server_type: "t2.micro"
-# keypair: "my-ansible-key"
-keypair: "test"
+keypair: "ProjectDev2"
 server_volume_size: 20 # in GB
-
+docker_user: "shaharbaron"
+docker_token: "dckr_pat_bDi8RTX3-tNNC4evf3dII1UV-xE"
 # vpc_name: "my-ansible-vpc"
 # vpc_cidr_block: "10.0.0.0/16"
 # subnet_cidr: "10.0.1.0/24"
@@ -22,8 +22,8 @@ server_volume_size: 20 # in GB
 # ec2_instance_type: "t2.micro"
 # keypair: "my-ansible-key"
 # aws_region: "us-east-1"
-vpc_id: vpc-0446e93a3ba02181c
-subnet_id: subnet-096f2e13d14502c42
-igw_id: igw-0c82ba460c92b4205
-server_ip: 3.93.238.56
-server_id: i-0f1e5d58ab626803f
+vpc_id: vpc-00f7c43f9867dd034
+subnet_id: subnet-0029c74e14fcc8845
+igw_id: igw-0be873d0c65500241
+server_ip: 18.195.64.148
+server_id: i-0ece02b1cd1ad6c04

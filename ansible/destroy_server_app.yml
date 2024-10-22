@@ -1,0 +1,75 @@
+---
+- name: Destroy infrastructure on AWS
+  hosts: localhost
+  connection: local
+  vars_files:
+    - group_vars/project_vars.yml
+    - group_vars/docker.env
+  tasks:
+    - name: Terminate EC2 instance
+      amazon.aws.ec2_instance:
+        instance_ids: "{{ server_id }}"
+        state: absent
+        region: "{{ aws_region }}"
+      ignore_errors: yes
+
+    - name: Delete security group
+      amazon.aws.ec2_security_group:
+        group_id: "{{ sg.group_id }}"
+        state: absent
+        region: "{{ zone }}"
+      ignore_errors: yes
+
+    - name: Delete route table
+      ec2_vpc_route_table:
+        vpc_id: "{{ vpc_id }}"
+        region: "{{ aws_region }}"
+        route_table_id: "{{ public_route_table.route_table.id }}"
+        state: absent
+      ignore_errors: yes
+
+    - name: Delete Internet Gateway
+      amazon.aws.ec2_vpc_igw:
+        vpc_id: "{{ vpc_id }}"
+        region: "{{ zone }}"
+        state: absent
+      ignore_errors: yes
+
+    - name: Delete subnet
+      amazon.aws.ec2_vpc_subnet:
+        state: absent
+        vpc_id: "{{ vpc_id }}"
+        cidr: "{{ subnet_cidr }}"
+        region: "{{ zone }}"
+      ignore_errors: yes
+
+    - name: Delete VPC
+      amazon.aws.ec2_vpc_net:
+        name: "{{ vpc_name }}"
+        cidr_block: "{{ network }}"
+        region: "{{ zone }}"
+        state: absent
+      ignore_errors: yes
+
+    - name: Remove variables from project_vars.yml
+      ansible.builtin.lineinfile:
+        path: group_vars/project_vars.yml
+        regexp: "{{ item }}"
+        state: absent
+      loop:
+        - "^vpc_id: "
+        - "^subnet_id: "
+        - "^igw_id: "
+        - "^server_ip: "
+        - "^server_id: "
+
+    - name: Remove Docker image from DockerHub
+      community.docker.docker_image:
+        name: "{{ docker_user }}/project_dev"
+        tag: latest
+        state: absent
+      ignore_errors: yes
+
+    - name: Display completion message
+      debug:
+        msg: "Infrastructure destruction complete. Please verify in your AWS console that all resources have been properly removed."
