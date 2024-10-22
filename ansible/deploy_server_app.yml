@@ -219,12 +219,13 @@
 
     - name: Clone my app repo
       git:
-        repo: git@github.com:elieyal/final_project_pass_gen.git
+        repo: git@github.com:shaharbaron/ProjectDev.git
         dest: /opt/app
         version: main
         key_file: ~/.ssh/id_rsa
         accept_hostkey: yes
         force: yes
+
     - name: Set execute permissions on install_osm.sh
       file:
         path: /opt/app/install_osm.sh
