@@ -14,9 +14,9 @@ driver = webdriver.Chrome(service=se, options=options)
 driver.get("file:///Users/tamirlevi/DevWithgit/ProjectDev/index.html")
 
 # בבדיקת השחקן הראשו
-player1 = driver.find_element(By.CLASS_NAME, "Player1")  # שים לב לקייס הנכון של ה-class
+player1 = driver.find_element(By.CLASS_NAME, ".Player1 h2") 
 try:
-    assert player1.text != "Player 1"
+    assert player1.text != "Player1"
 except AssertionError:
     print("Test 1: The player text is not correct")
 

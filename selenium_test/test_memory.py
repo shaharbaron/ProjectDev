@@ -38,7 +38,7 @@ def test_main_stat():
 
 #score check
 def test_score():
-  player1 = driver.find_element(By.CLASS_NAME, "Player1")  # שים לב לקייס הנכון של ה-class
+  player1 = driver.find_element(By.CLASS_NAME, ".Player1 h2")  
   try:
       assert player1.text != "Player 1"
   except AssertionError:
@@ -48,6 +48,7 @@ def test_score():
 
 
 def test_restart():
+  WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "restartbutton")))
   cards = driver.find_elements(By.CLASS_NAME, "card")
   cardslen = len(cards)
   restars_button = driver.find_element(By.CLASS_NAME,"restartbutton")
@@ -61,9 +62,9 @@ def test_restart():
 
 #game check
 def test_titel():
-  title_element = driver.find_element(By.CLASS_NAME, "Memory")
+  title_element = driver.find_element(By.CLASS_NAME, ".Memory h2")
   try:
-    assert title_element.text != "Memory-Game"  # בדיקה שהטקסט כן תואם
+    assert title_element.text != "Memory-Game" 
   except AssertionError:
     print("Test 3: Title is not correct")
 
@@ -71,6 +72,7 @@ def test_titel():
 
 
 def test_cards():
+  WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "exitbutton")))
   exit_button = driver.find_element(By.CLASS_NAME, "exitbutton")
   exit_button.click()
   bye_element = driver.find_element(By.ID, "thankyou-message")
