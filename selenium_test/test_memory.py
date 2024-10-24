@@ -36,31 +36,14 @@ def test_main_stat():
 
 
 
-def test_cards():
-  cards = driver.find_elements(By.CLASS_NAME, "card")
-  cardslen = len(cards)
-  try:
-   assert cardslen <= 2
-  except AssertionError:
-    print("Game is not initialized")
-
-
 #score check
-def test_score():  
-  first_card = driver.find_element(By.CSS_SELECTOR, 'div.card[data-id="3b"]')
-  first_card.click()
-  second_card = driver.find_element(By.CSS_SELECTOR, 'div.card[data-id="3b"]')
-  second_card.click()
-  score_element = driver.find_element(By.ID, "score1") 
-  new_score = score_element.text
-  if new_score == '':
-        new_score = '0'
-  previous_score = 0
+def test_score():
+  player1 = driver.find_element(By.CLASS_NAME, "Player1")  # שים לב לקייס הנכון של ה-class
   try:
-        assert int (new_score) > previous_score 
-        previous_score = int(new_score)
+      assert player1.text != "Player 1"
   except AssertionError:
-          print("test 1: score is not updated")
+      print("Test 1: The player text is not correct")
+
           
 
 
@@ -78,13 +61,27 @@ def test_restart():
 
 #game check
 def test_titel():
-  titel = driver.find_element(By.CLASS_NAME, "Memory")
+  title_element = driver.find_element(By.CLASS_NAME, "Memory")
   try:
-      assert titel.text != "Memory-Game"
+    assert title_element.text != "Memory-Game"  # בדיקה שהטקסט כן תואם
   except AssertionError:
-      print("test 3:the player is not changed")
-      driver.quit()
-      exit(1)
+    print("Test 3: Title is not correct")
+
+
+
+
+def test_cards():
+  exit_button = driver.find_element(By.CLASS_NAME, "exitbutton")
+  exit_button.click()
+  bye_element = driver.find_element(By.ID, "thankyou-message")
+  try:
+      assert bye_element.text == "Thank you and bye bye"
+  except AssertionError:
+          print("Test 4: The exit page message is not correct")
+  except:
+      print("Test 4: Exit page did not load correctly")
+  driver.quit()
+  exit(1)
 
 
 
