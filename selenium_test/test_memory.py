@@ -34,6 +34,9 @@ def test_score():
     except AssertionError:
         print("Test 1: The player text is not correct")
 
+        
+    
+
 def test_restart():
     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "restartbutton")))
     cards = driver.find_elements(By.CLASS_NAME, "card")
@@ -45,14 +48,23 @@ def test_restart():
         assert cards_len == len(cards)
     except AssertionError:
         print("Test 2: The restart button is not working")
+        driver.quit()
+        exit(1)
+        
+        
+    
 
 
 def test_title():
     title_element = driver.find_element(By.CLASS_NAME, "Memory")
     try:
-        assert title_element.find_element(By.TAG_NAME, 'h2').text != "Memory-Game"
+        assert title_element.text == "Memory-Game"
     except AssertionError:
         print("Test 3: The title is not correct")
+        driver.quit()
+        exit(1)
+        
+   
 
 
 def test_cards():
@@ -64,7 +76,8 @@ def test_cards():
         assert bye_element.text == "Thank you and bye bye"
     except AssertionError:
         print("Test 4: The exit page message is not correct")
-    except:
-        print("Test 4: The exit page did not load correctly")
-    finally:
         driver.quit()
+        exit(1)
+    
+
+
