@@ -13,10 +13,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build Docker image
-        run: docker build --tag myapp .
+        run: docker build --tag Memory-Game:latest . 
 
       - name: Run Docker container
-        run: docker run -d --name app -p 80:3000 myapp
+        run: docker run -d --name app -p 80:3000 Memory-Game:latest
 
       - name: Set up Python
         uses: actions/setup-python@v2
