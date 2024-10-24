@@ -85,12 +85,6 @@
             gateway_id: "{{ igw.gateway_id }}"
       register: public_route_table
 
-    - name: Get user's public IP
-      uri:
-        url: https://api.ipify.org?format=json
-        return_content: yes
-      register: user_public_ip
-
     - name: Create security group
       amazon.aws.ec2_security_group:
         name: "{{ vpc_name }} VPC SG"
@@ -101,10 +95,18 @@
         rules:
           - proto: tcp
             ports:
-              - 80
               - 22
-            cidr_ip: "{{ (user_public_ip.content | from_json).ip }}/32"
+              - 80
+            cidr_ip: 0.0.0.0/0
       register: sg
+
+    - name: Add security group definition to vars file
+      ansible.builtin.lineinfile:
+        path: group_vars/project_vars.yml
+        regexp: "sg_id: "
+        line: "sg_id: {{ sg.group_id }}"
+        state: present
+        create: True
 
     - name: Create server
       amazon.aws.ec2_instance:

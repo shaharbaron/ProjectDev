@@ -62,13 +62,23 @@
         - "^igw_id: "
         - "^server_ip: "
         - "^server_id: "
+        - "^sg_id: "
 
     - name: Remove Docker image from DockerHub
-      community.docker.docker_image:
-        name: "{{ docker_user }}/project_dev"
+      shell: |
+        HUB_TOKEN=$(curl -s -H "Content-Type: application/json" -X POST -d "{\"username\": \"{{ docker_user }}\", \"password\": \"{{ docker_token }}\"}" https://hub.docker.com/v2/users/login/ | jq -r .token)
+        curl -i -X DELETE \
+          -H "Accept: application/json" \
+          -H "Authorization: JWT $HUB_TOKEN" \
+          https://hub.docker.com/v2/repositories/{{ docker_user }}/project_dev/tags/latest
+    - name: Remove image
+      community.docker.docker_image_remove:
+        name: "shaharbaron/project_dev"
         tag: latest
-        state: absent
-      ignore_errors: yes
+    # - name: remove docker repo
+    #   community.docker.docker_repo:
+    #     name: "{{ docker_user }}/project_dev"
+    #     state: absent
 
     - name: Display completion message
       debug:
