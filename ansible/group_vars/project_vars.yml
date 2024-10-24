@@ -22,8 +22,3 @@ docker_token: "dckr_pat_bDi8RTX3-tNNC4evf3dII1UV-xE"
 # ec2_instance_type: "t2.micro"
 # keypair: "my-ansible-key"
 # aws_region: "us-east-1"
-vpc_id: vpc-00f7c43f9867dd034
-subnet_id: subnet-0029c74e14fcc8845
-igw_id: igw-0be873d0c65500241
-server_ip: 18.195.64.148
-server_id: i-0ece02b1cd1ad6c04

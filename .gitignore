@@ -3,3 +3,4 @@ group_vars/docker.env
 # Ignore environment files
 *.env
 group_vars/*.env
+/ProjectDev2.pem
