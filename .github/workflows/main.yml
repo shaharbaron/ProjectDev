@@ -27,15 +27,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: deploy site
-        uses: actions/checkout@v4
-        # with:
-        #   host: ${{ secrets.HOST }}
-        #   username: ${{ secrets.USER }}
-        #   key: ${{ secrets.SSH_KEY }}
-        #   port: ${{ secrets.PORT }}
-        #   script_stop: true
-        #   script: |
-        #     cd /opt/app 
-        #     sudo docker compose pull && sudo docker compose up -d --force-recreate
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.PORT }}
+          script_stop: true
+          script: |
+            cd /opt/app 
+            sudo docker compose pull && sudo docker compose up -d --force-recreate
 
             
