@@ -23,7 +23,7 @@ chrome_options.add_argument("--disable-dev-shm-usage")
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 
 def test_main_stat():
-    url = "http://localhost"
+    url = "http://localhost:3000/"
     driver.get(url)
 
 
