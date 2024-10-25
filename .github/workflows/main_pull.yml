@@ -30,4 +30,4 @@ jobs:
         run: pip install requests webdriver_manager selenium pytest
 
       - name: Run the PytTest script
-        run: pytest selenium_test/test_memory.py -rA
+        run: pytest -rA

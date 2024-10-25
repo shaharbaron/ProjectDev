@@ -48,8 +48,7 @@ def test_restart():
         assert cards_len == len(cards)
     except AssertionError:
         print("Test 2: The restart button is not working")
-        driver.quit()
-        exit(1)
+        
         
         
     
@@ -61,8 +60,7 @@ def test_title():
         assert title_element.text == "Memory-Game"
     except AssertionError:
         print("Test 3: The title is not correct")
-        driver.quit()
-        exit(1)
+        
         
    
 
@@ -76,8 +74,7 @@ def test_cards():
         assert bye_element.text == "Thank you and bye bye"
     except AssertionError:
         print("Test 4: The exit page message is not correct")
-        driver.quit()
-        exit(1)
+        
     
 
 
