@@ -21,7 +21,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.8'
+          python-version: '3.9'
 
       - name: Install Chromium browser
         run: sudo apt-get install -y chromium-browser
@@ -29,5 +29,5 @@ jobs:
       - name: Install the necessary Python packages
         run: pip install requests webdriver_manager selenium pytest
 
-      - name: Run the Python tests
-        run: pytest selenium_test/test_memory.py -rA
+      - name: Run the PytTest script
+        run: pytest -rA
