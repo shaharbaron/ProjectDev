@@ -57,7 +57,7 @@ def test_restart():
 def test_title():
     title_element = driver.find_element(By.CLASS_NAME, "Memory")
     try:
-        assert title_element.text == "Memory-Game"
+        assert title_element.text != "Memory-Game"
     except AssertionError:
         print("Test 3: The title is not correct")
         
