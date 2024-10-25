@@ -20,7 +20,7 @@ jobs:
         run: docker build . --tag ${{ secrets.DOCKER_USER }}/project_dev:latest
 
       - name: Push to Docker Hub
-        run: docker push ${{ secrets.DOCKER_USER }}/project_devv:latest
+        run: docker push ${{ secrets.DOCKER_USER }}/project_dev:latest
 
   deploy:
     needs: docker_build
