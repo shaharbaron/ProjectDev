@@ -26,7 +26,7 @@ jobs:
     needs: docker_build
     runs-on: ubuntu-latest
     steps:
-      - name: deploy site
+      - name: deploy app
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.HOST }}
