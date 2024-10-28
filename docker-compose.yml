@@ -8,6 +8,4 @@ services:
     container_name: memory-game
     ports:
       - "80:80"
-    # שאתה רוצה לשתף קבצים מקומיים עם הקונטיינר שלך בזמן הפיתוח
-    volumes:
-      - "./:/usr/share/nginx/html/index.html/"
+    
